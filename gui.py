@@ -4,8 +4,8 @@ class JanelaPrincipal(wx.Frame):
 	def __init__(self, parent, title):
 		wx.Frame.__init__(self, parent, title = title, size = (900, 550))
 		self.criaMenuSuperior()
-		self.criaConteudo()
 		self.criaBarraInferior()
+		self.criaPanels()
 
 		self.Show(True)
 
@@ -34,30 +34,22 @@ class JanelaPrincipal(wx.Frame):
 
 		self.SetMenuBar(barraMenus)
 
-	def criaConteudo(self):
-		# Será alterado quando tiver informações para mostrar
-		painelEsquerda = wx.Panel(self)
-		painelDireita = wx.Panel(self)
-
-		sizerEsquerda = wx.BoxSizer(wx.VERTICAL)
-
-		mensagem = wx.StaticText(painelEsquerda, -1,
-			"Busque uma música, álbum ou artista")
-		caixaTexto = wx.TextCtrl(painelEsquerda)
-
-		sizerEsquerda.Add(mensagem, 0)
-		sizerEsquerda.Add(caixaTexto, 0,wx.EXPAND, 5)
-		sizerEsquerda.Add(painelEsquerda, 25, wx.EXPAND)
-
-		sizerPai = wx.BoxSizer(wx.HORIZONTAL)
-		sizerPai.Add(sizerEsquerda, 1, wx.EXPAND | wx.ALIGN_LEFT | wx.RIGHT, 1)
-		sizerPai.Add(painelDireita, 3, wx.EXPAND | wx.ALIGN_RIGHT | wx.LEFT, 1)
-
-		self.SetSizer(sizerPai)
-
 	def criaBarraInferior(self):
 		self.CreateStatusBar()
 		self.SetStatusText('Tudo pronto!')
+
+	def criaPanels(self):
+		pEsquerda = PainelEsquerda(self)
+		pDireita = PainelResultados(self)
+
+		sizer = wx.BoxSizer(wx.HORIZONTAL)
+		sizer.Add(pEsquerda, 1, wx.EXPAND | wx.ALIGN_LEFT
+			| wx.RIGHT | wx.TOP | wx.BOTTOM, 1)
+		sizer.Add(pDireita, 3, wx.EXPAND | wx.ALIGN_RIGHT
+			| wx.LEFT | wx.TOP | wx.BOTTOM, 1)
+
+		self.SetSizer(sizer)
+
 
 	# Bindings -------------------------------------------------------------
 	def onSalvar(self, event):
@@ -86,7 +78,45 @@ class JanelaPrincipal(wx.Frame):
 		msg.Destroy()
 
 
+class PainelEsquerda(wx.Panel):
+	def __init__(self, parent):
+		wx.Panel.__init__(self, parent = parent)
+
+		mensagem = wx.StaticText(self, -1,
+			"Busque uma música, álbum ou artista")
+		caixaDeTexto = wx.TextCtrl(self)
+		resultadosPesquisa = PainelResultados(self)
+
+		sizer = wx.BoxSizer(wx.VERTICAL)
+		sizer.Add(mensagem, 1, wx.EXPAND | wx.ALL, 5)
+		sizer.Add(caixaDeTexto, 1, wx.EXPAND | wx.ALL, 5)
+		sizer.Add(resultadosPesquisa, 25, wx.EXPAND)
+
+		self.SetSizer(sizer)
+
+
+class PainelResultados(wx.Panel):
+	def __init__(self, parent):
+		wx.Panel.__init__(self, parent = parent)
+
+		mensagem = wx.StaticText(self, -1,
+			"Nada para ver aqui", (-1, -1))
+
+
+class PainelDireita(wx.Panel):
+	def __init__(self, parent):
+		wx.Panel.__init__(self, parent = parent)
+
+		mensagem = StaticText(self, 'Nada para ver aqui')
+
+
+class Aplicativo(wx.App):
+	def OnInit(self):
+		frame = JanelaPrincipal(None, 'Caça-Letras')
+		frame.Show()
+		return True
+
+
 if __name__ == '__main__':
-	aplicacao = wx.App(False)
-	frame = JanelaPrincipal(None, 'Caça-Letras')
-	aplicacao.MainLoop()
+	app = Aplicativo()
+	app.MainLoop()
