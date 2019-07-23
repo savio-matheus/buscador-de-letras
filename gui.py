@@ -6,7 +6,6 @@ class JanelaPrincipal(wx.Frame):
 		self.criaMenuSuperior()
 		self.criaConteudo()
 		self.criaBarraInferior()
-		self.SetBackgroundColour((240, 240, 240))
 
 		self.Show(True)
 
@@ -36,22 +35,23 @@ class JanelaPrincipal(wx.Frame):
 		self.SetMenuBar(barraMenus)
 
 	def criaConteudo(self):
-		mensagem = wx.StaticText(self, -1,
-			"Busque uma música, álbum ou artista", (-1, -1))
-		caixaTexto = wx.TextCtrl(self, )
-
 		# Será alterado quando tiver informações para mostrar
 		painelEsquerda = wx.Panel(self)
 		painelDireita = wx.Panel(self)
 
 		sizerEsquerda = wx.BoxSizer(wx.VERTICAL)
-		sizerEsquerda.Add(mensagem, 1, wx.ALIGN_TOP)
-		sizerEsquerda.Add(caixaTexto, 1, wx.ALIGN_TOP | wx.EXPAND, 5)
+
+		mensagem = wx.StaticText(painelEsquerda, -1,
+			"Busque uma música, álbum ou artista")
+		caixaTexto = wx.TextCtrl(painelEsquerda)
+
+		sizerEsquerda.Add(mensagem, 0)
+		sizerEsquerda.Add(caixaTexto, 0,wx.EXPAND, 5)
 		sizerEsquerda.Add(painelEsquerda, 25, wx.EXPAND)
 
 		sizerPai = wx.BoxSizer(wx.HORIZONTAL)
-		sizerPai.Add(sizerEsquerda, 1, wx.EXPAND | wx.ALIGN_LEFT)
-		sizerPai.Add(painelDireita, 3, wx.EXPAND | wx.ALIGN_RIGHT)
+		sizerPai.Add(sizerEsquerda, 1, wx.EXPAND | wx.ALIGN_LEFT | wx.RIGHT, 1)
+		sizerPai.Add(painelDireita, 3, wx.EXPAND | wx.ALIGN_RIGHT | wx.LEFT, 1)
 
 		self.SetSizer(sizerPai)
 
