@@ -1,7 +1,7 @@
 import json
 import requests
 
-api_key = 'apikey=0f1588763cb197f6e2c0c54553293de2' # Insira aqui sua api_key
+api_key = 'apikey=' # Insira aqui sua api_key
 api_url = 'https://api.vagalume.com.br/search.'
 
 
