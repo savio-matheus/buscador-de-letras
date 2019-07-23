@@ -68,8 +68,8 @@ Retorno:
 		'musicTextTransl' : letras da música traduzida
 	}
 '''
-def returnMusic(musid):
-	url = api_url + 'php?musid=' + musid + '&' + api_key
+def returnMusic(musId):
+	url = api_url + 'php?musid=' + musId + '&' + api_key
 
 	while True:
 		r = requests.get(url)
