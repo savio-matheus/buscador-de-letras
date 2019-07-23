@@ -46,7 +46,7 @@ class JanelaPrincipal(wx.Frame):
 		sizer.Add(pEsquerda, 1, wx.EXPAND | wx.ALIGN_LEFT | wx.ALL, 1)
 		sizer.Add(pDireita, 3, wx.EXPAND | wx.ALIGN_RIGHT | wx.ALL, 1)
 
-		SetSizer(sizer)
+		self.SetSizer(sizer)
 
 
 	# Bindings -------------------------------------------------------------
@@ -77,8 +77,8 @@ class JanelaPrincipal(wx.Frame):
 
 
 class PainelEsquerda(wx.Panel):
-	def __init__(self):
-		wx.Panel.__init__(self)
+	def __init__(self, parent):
+		wx.Panel.__init__(self, parent)
 
 		mensagem = wx.StaticText(self, -1,
 			"Busque uma música, álbum ou artista")
@@ -94,16 +94,16 @@ class PainelEsquerda(wx.Panel):
 
 
 class PainelResultados(wx.Panel):
-	def __init__(self):
-		wx.Panel.__init__(self)
+	def __init__(self, parent):
+		wx.Panel.__init__(self, parent)
 
 		mensagem = wx.StaticText(self, -1,
 			"Nada para ver aqui", (-1, -1))
 
 
 class PainelDireita(wx.Panel):
-	def __init__(self):
-		wx.Panel.__init__(self)
+	def __init__(self, parent):
+		wx.Panel.__init__(self, parent)
 
 		mensagem = StaticText(self, 'Nada para ver aqui')
 
