@@ -1,16 +1,8 @@
 import json
 import requests
 
-API_KEY = '' # api_key=...
 API_URL = 'https://api.vagalume.com.br'
 API_LIMIT = '&limit=10'
-
-API_SEARCH = [
-	'/search.art?',
-	'/search.excerpt?',
-	'/search.artmus?',
-	'/search.alb?'
-]
 
 LANGUAGES = [
 	'no info',
@@ -27,124 +19,102 @@ LANGUAGES = [
 
 class Doc():
 	def __init__(self, ident = 0, url = '', band = '',
-		finds = -1, lang = 'no info', title = ''):
+		typeDoc = '', lang = 0, title = ''):
+		self.typeDoc = typeDoc
 		self.ident = ident
 		self.url = url
 		self.band = band
 		self.lang = lang
 		self.title = title
-		self.finds = finds
 
-	def search(keyWords, searchFor):
-		url = API_URL + API_SEARCH[searchFor] + API_KEY \
-				+ '&q=' + keyWords + API_LIMIT
-		print(url)
+	def expand(self, API_KEY):
+		if self.typeDoc == 'song':
+			musId = self.ident
+			url = API_URL + '/search.php?' + 'musid=' + musId + '&' \
+				+ 'apikey=' + API_KEY
 
-		for n in range(0, 2):
-			r = requests.get(url)
-			if r.status_code == 200:
-				break
-			else:
-				print('Cod.: ' + str(r.status_code))
+			res = _request(url)
+			if res == None:
+				return res
 
-		res = json.loads(r.content)
+			name = res['mus'][0]['name']
+			artName = res['art']['name']
+			url = res['mus'][0]['url']
+			lang = res['mus'][0]['lang']
+			text = res['mus'][0]['text']
 
-		if res['response']['numFound'] == 0:
-			return Doc()
+			return Song(name, artName, url, lang, text, musId)
+		elif self.typeDoc == 'artist':
+			artUrl = self.url
+			url = API_URL + artUrl + 'index.js'
 
-		docs = []
-		if searchFor <= 2:
-			for n in res['response']['docs']:
-				ident = n['id']
-				url = n['url']
-				band = n['band']
+			res = request(url)
+			if res == None:
+				return res
 
-				try:
-					lang = n['langID']
-					title = n['title']
-					finds = 1
-					docs.append(Doc(ident, url, band, finds, lang, title))
-				except KeyError:
-					finds = 0
-					docs.append(Doc(ident, url, band, finds))
+			name = res['artist']['desc']
+			imageUrl = res['artist']['pic_medium']
 
+			genres = []
+			for n in res['artist']['genre']:
+				genres.append(n)
+				if len(genres) == 3: break
+
+			topLyrics = []
+			for n in res['artist']['toplyrics']['item']:
+				topLyrics.append(n)
+				if len(topLyrics) == 5: break
+
+			albums = []
+			for n in res['artist']['albums']['item']:
+				albums.append(n)
+
+			ident = res['artist']['id']
+
+			return Artist(
+				ident, artUrl, name, imageUrl,
+				genres, topLyrics, albums
+				)
+		elif self.typeDoc == 'album':
+			pass
 		else:
-			for n in res['response']['docs']:
-				ident = n['id']
-				url = n['url']
-				band = n['band']
-				title = n['title']
-				finds = 3
-				docs.append(Doc(ident, url, band, finds, title = title))
+			return None
 
-		return docs
+	def toString(self):
+		stringList = []
+		if self.typeDoc == 'artist':
+			stringList.append('(art)')
+			stringList.append(self.band)
 
-	def show(self):
-		if self.finds == 0:
-			print('Banda/artista: ' + self.band)
+		elif self.typeDoc == 'song':
+			stringList.append('(mus)')
+			try:
+				stringList.append('(%s)' % LANGUAGES[self.lang])
+			except IndexError:
+				stringList.append('(%s)' % LANGUAGES[0])
 
-		elif self.finds == 1:
-			print('Música:' + self.title)
-			print('Banda/artista: ' + self.band)
-			print('Idioma: ' + self.lang)
+			stringList.append(self.title)
+			stringList.append(self.band)
 
-		elif self.finds == 3:
-			print('Álbum: ' + self.title)
-			print('Banda/artista: ' + self.band)
+		elif self.typeDoc == 'album':
+			stringList.append('(alb)')
+			stringList.append(self.title)
+			stringList.append(self.band)
+		return stringList
 
-		elif self.finds == -1:
-			print('Nada encontrado')
-
-		else:
-			print('Falha de conexão')
 
 class Artist():
-	def __init__(self, artUrl, name, imageUrl,
+	def __init__(self, ident, artUrl, name, imageUrl,
 		genres, topLyrics, albums):
-
-		self.url = API_URL + artUrl + 'index.js'
+		self.ident = ident
+		self.url = artUrl
 		self.name = name
 		self.imageUrl = imageUrl
 		self.genres = genres
 		self.topLyrics = topLyrics
 		self.albums = albums
 
-	def find(doc):
-		artUrl = doc.url
-		url = API_URL + artUrl + 'index.js'
-
-		# Melhore este pedaço
-		for n in range(0, 2):
-			r = requests.get(url)
-			if r.status_code == 200:
-				res = json.loads(r.content)
-				break
-			else:
-				print('Cod.: ' + str(r.status_code))
-
-		name = res['artist']['desc']
-		imageUrl = res['artist']['pic_medium']
-
-		genres = []
-		for n in res['artist']['genre']:
-			genres.append(n)
-			if len(genres) == 3: break
-
-		topLyrics = []
-		for n in res['artist']['toplyrics']['item']:
-			topLyrics.append(n)
-			if len(topLyrics) == 5: break
-
-		albums = []
-		for n in res['artist']['albums']['item']:
-			albums.append(n)
-
-		return Artist(
-			artUrl, name, imageUrl,
-			genres, topLyrics, albums
-			)
-
-	def show(self):
+	def toString(self):
 		strGenres = []
 		for i in self.genres:
 			strGenres.append(i['name'])
@@ -157,106 +127,109 @@ class Artist():
 		for i in self.albums:
 			strAlbums.append(i['desc'])
 
-		strGenres = ', '.join(strGenres)
-		strTopLyrics = ', '.join(strTopLyrics)
-		strAlbums = ', '.join(strAlbums)
+		stringList = [
+			self.name,
+			self.imageUrl,
+			strGenres,
+			strTopLyrics,
+			strAlbums,
+			self.url
+		]
+		return stringList
 
-		print('Banda/artista: ' + self.name)
-		print('Gêneros: ' + strGenres)
-		print('Mais procuradas: ' + strTopLyrics)
-		print('Álbuns: ' + strAlbums)
 
-class Music():
-	def __init__(self, name, artName, url, lang, text, translUrl = '',
-		translLang = 0, translText = '', translName = ''):
-		
+class Song():
+	def __init__(self, name, artName, url, lang, text, musId):
 		self.name = name
 		self.artName = artName
 		self.url = url
+		self.ident = musId
 		self.lang = lang
 		self.text = text
-		self.translUrl = translUrl
-		self.translLang = translLang
-		self.translText = translText
-		self.translName = translName
 
-	def find(doc):
-		musId = doc.ident
-		url = API_URL + '/search.php?' + 'musid=' + musId + '&' + API_KEY 
-		print(url)
-
-		for n in range(0, 2):
-			r = requests.get(url)
-			if r.status_code == 200:
-				break
-			else:
-				print('Cod.: ' + str(r.status_code))
-
-		res = json.loads(r.content)
-
-		name = res['mus'][0]['name']
-		artName = res['art']['name']
-		url = res['mus'][0]['url']
-		lang = res['mus'][0]['lang']
-		text = res['mus'][0]['text']
-		
+	def translate(self, langID = 1):
+		url = API_URL + '/search.php?' + 'musid=' + self.ident + '&' \
+				+ 'apikey=' + API_KEY
+		res = _request(url)
+		if res == None:
+			return
 		try:
-			translUrl = \
-				res['mus'][0]['translate'][0]['url']
+			translUrl = res['mus'][0]['translate'][0]['url']
+			translText = res['mus'][0]['translate'][0]['text']
+			#lines = translText.splitlines()
+			#translTitle = requests.sub(r'\[|\]|\n', '', lines[0]).strip()
+
+			#self.name = translTitle
+			self.url = translUrl
+			self.lang = langID
+			self.text = translText
 		except KeyError:
-			translUrl = ''
-		try:
-			translLang = \
-				res['mus'][0]['translate'][0]['lang']
-		except KeyError:
-			translLang = 0
-		try:
-			translText = \
-				res['mus'][0]['translate'][0]['text']
-		except KeyError:
-			translText = ''
-		'''
-		try:
-			translName = \
-				res['mus'][0]['translate'][0]['text'].input()
-		except KeyError:
-			translName = ''
-		'''
+			print("There's no translation in the choosen language")
 
-		return Music(
-			name, artName, url, lang, text, translUrl,
-			translLang, translText, translName = ''
-			)
+	def toString(self):
+		stringList = [
+			self.name,
+			self.artName,
+			LANGUAGES[self.lang],
+			self.text,
+			self.url
+			]
+		return stringList
 
-	def show(self):
-		print(self.name)
-		print(self.artName)
-		print(self.text)
-		print(self.url)
 
-	def showTransl(self):
-		print(self.name)
-		print(self.artName)
-		print(self.translText)
-		print(self.translUrl)
+def _request(url):
+	print(url)
+	try:
+		api_response = requests.get(url)
+		if api_response.status_code == 200:
+			return json.loads(api_response.content)
+		else:
+			print('Cod.: ' + str(r.status_code))
+			return None
+	except:
+		print('Connection error')
+		return None
 
-if __name__ == '__main__': # para testes
-	API_KEY = input("Chave da api: ")
+def search(keyWords, searchFor, API_KEY):
+	API_SEARCH = [
+		'/search.art?', #0
+		'/search.excerpt?', #1
+		'/search.artmus?', #2
+		'/search.alb?' #3
+	]
+	url = API_URL + API_SEARCH[searchFor] + 'apikey=' + API_KEY \
+			+ '&q=' + keyWords + API_LIMIT
 
-	termos = input('Sua busca: ')
-	busca = Doc.search(termos, 1) # Busca por música
+	res = _request(url)
+	if res == None:
+		return res
 
-	musica = Music.find(busca[0])
+	if res['response']['numFound'] == 0:
+		return []
 
-	musica.show()
-	print('\n\n')
-	musica.showTransl()
+	docs = []
+	if searchFor <= 2:
+		for n in res['response']['docs']:
+			ident = n['id']
+			url = n['url']
+			band = n['band']
 
-"""
-Lembrete:
- 	tratar exceções
- 	colocar "r = requests.get(url)" em função separada
- 	obter o nome traduzido das músicas
- 	buscar todas as traduções se tiver mais de uma (no momento,
- 	obtém apenas em português)
-"""
+			try:
+				lang = n['langID']
+				title = n['title']
+				finds = 'song'
+				docs.append( Doc(ident, url, band, finds, lang, title) )
+			except KeyError:
+				finds = 'artist'
+				docs.append( Doc(ident, url, band, finds) )
+	else:
+		for n in res['response']['docs']:
+			ident = n['id']
+			url = n['url']
+			band = n['band']
+			title = n['title']
+			finds = 'album'
+			docs.append(Doc(ident, url, band, finds, title = title))
+
+	return docs
+
