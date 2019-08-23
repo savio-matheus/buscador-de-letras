@@ -3,11 +3,10 @@
 <head>
     <meta charset="utf-8">
     <title>{0}</title>
-    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
     <h1>{0}</h1>
-    <h2><img src="https://www.vagalume.com.br{1}"></h2>
+    <h2><img class='artist' src="https://www.vagalume.com.br{1}"></h2>
     <h3> <strong>Gêneros</strong></h3>
     <p>{2}</p>
     <h3> <strong>Melhores músicas</strong></h3>
@@ -15,7 +14,36 @@
     <h3><strong>Álbuns</strong></h3>
     <p>{4}</p>
     <p><a href="https://www.vagalume.com.br{5}">https://www.vagalume.com.br{5}</a></p>
-    <p><img src="img/fundo-claro.jpg" alt="Fonte: Vagalume"></p>
+    <p><img class='logo' src="https://api.vagalume.com.br/images/fundo-claro/820-fundo-claro-transparente.png" alt="Fonte: Vagalume"></p>
 </body>
+<style type="text/css">
+body {{
+    font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    background-color: #f0f0f0;
+    margin-left: auto;
+    margin-right: auto;
+}}
+
+h1, h2, h3 {{
+    text-align: center;
+}}
+
+p {{
+    text-align: center;
+}}
+
+ul {{
+    text-align: center;
+}}
+
+.logo{{
+    height: 5%;
+    width: 20%;
+}}
+.artist{{
+    height: 20%;
+    width: 20%;
+}}
+</style>
 
 </html>

@@ -48,7 +48,7 @@ class Doc():
 			artUrl = self.url
 			url = API_URL + artUrl + 'index.js'
 
-			res = request(url)
+			res = _request(url)
 			if res == None:
 				return res
 
@@ -138,13 +138,10 @@ class Artist():
 		]
 		return stringList
 
-	def getDict(self):
-		return self.raw
-
 
 class Song():
-	def __init__(self, name, artName, url, lang, text, musId, raw):
-		self.name = name
+	def __init__(self, title, artName, url, lang, text, musId, raw):
+		self.title = title
 		self.artName = artName
 		self.url = url
 		self.ident = musId
@@ -152,7 +149,7 @@ class Song():
 		self.text = text
 		self.raw = raw
 
-	def translate(self, langID = 1):
+	def translate(self, langID = 1): # Ainda incompleta
 		url = API_URL + '/search.php?' + 'musid=' + self.ident + '&' \
 				+ 'apikey=' + API_KEY
 		res = _request(url)
@@ -164,7 +161,7 @@ class Song():
 			#lines = translText.splitlines()
 			#translTitle = requests.sub(r'\[|\]|\n', '', lines[0]).strip()
 
-			#self.name = translTitle
+			#self.title = translTitle
 			self.url = translUrl
 			self.lang = langID
 			self.text = translText
@@ -172,17 +169,15 @@ class Song():
 			print("There's no translation in the choosen language")
 
 	def toString(self):
+		print(self.lang)
 		stringList = [
-			self.name,
+			self.title,
 			self.artName,
-			LANGUAGES[self.lang],
+			LANGUAGES[0],
 			self.text,
 			self.url
 			]
 		return stringList
-
-	def getDict(self):
-		return self.raw
 
 
 def _request(url):
@@ -240,4 +235,3 @@ def search(keyWords, searchFor, API_KEY):
 			docs.append(Doc(ident, url, band, finds, title = title))
 
 	return docs
-

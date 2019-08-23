@@ -2,7 +2,7 @@ import api_vagalume as api
 
 API_KEY = ''
 
-def searchDocs(keyWords):
+def searchRoutine(keyWords):
 	search = list()
 	search.extend( api.search(keyWords, 0, API_KEY) )
 	search.extend( api.search(keyWords, 1, API_KEY) )
@@ -15,6 +15,16 @@ def searchDocs(keyWords):
 	else:
 		return None
 
+def viewerRoutine(docObj):
+	if docObj.typeDoc == 'song':
+		html = _getSong(docObj)
+	elif docObj.typeDoc == 'artist':
+		html = _getArtist(docObj)
+	else:
+		pass # reservado para o caso álbum
+
+	return html
+
 # Daqui para baixo ainda não está terminado
 def _removeDuplicates(docsList):
 	return docsList
@@ -22,30 +32,33 @@ def _removeDuplicates(docsList):
 def _getSong(docObj):
 	song = _checkCache(docObj)
 	if song:
-		return song
+		return _toHTML(song, 'song')
 	else:
 		song = docObj.expand(API_KEY)
-		song = toHTML(song)
 		_toCache(song)
+		song = _toHTML(song, 'song')
 		return song
 
 def _getArtist(docObj):
-	art = isCached(docObj)
+	art = _checkCache(docObj)
 	if art:
-		return art
+		return _toHTML(art, 'artist')
 	else:
 		art = docObj.expand(API_KEY)
-		art = toHTML(art)
 		_toCache(art)
+		art = _toHTML(art, 'artist')
 		return art
 
-def _toHTML(obj):
-	if type(obj) == type( api.Song() ):
+def _getAlbum(docObj):
+	pass
+
+def _toHTML(obj, objType):
+	if objType == 'song':
 		with open('html/templateSong.html', 'r') as file:
 			templateHTML = file.read()
 
 		stringList = obj.toString()
-		stringList[3] = text.replace('\n', '<br>')
+		stringList[3] = stringList[3].replace('\n', '<br>')
 		newHTML = templateHTML.format(
 			stringList[0],
 			stringList[1],
@@ -53,11 +66,11 @@ def _toHTML(obj):
 			stringList[3],
 			stringList[4]
 			)
-	else:
+	elif objType == 'artist':
 		with open('html/templateArtist.html', 'r', encoding="utf8") as file:
 			templateHTML = file.read()
 	
-		stringList = art.toString()
+		stringList = obj.toString()
 		
 		genres = str()
 		for i in stringList[2]:
@@ -82,17 +95,13 @@ def _toHTML(obj):
 			albums,
 			stringList[5]
 		)
-
-	toCache(newHTML, obj)
+	else:
+		pass
 
 	return newHTML
 
-def _toCache(html, obj):
-	with open('html/' + obj.ident + '.html', 'w', encoding='utf-8') as file:
-		file.write(html)
+def _toCache(obj):
+	pass
 
 def _checkCache(docObj):
 	return None
-
-def viewerRoutine(docObj):
-	pass

@@ -1,6 +1,6 @@
 import wx
 import model
-import wx.lib.scrolledpanel as wxScrll
+import wx.html2 as html
 from pubsub import pub
 from threading import Thread
 
@@ -13,7 +13,7 @@ class ThreadSearch(Thread):
 		self.start()
 
 	def run(self):
-		docs = model.searchDocs(self.words)
+		docs = model.searchRoutine(self.words)
 		wx.CallAfter( pub.sendMessage, 'docsPanel', docs=docs )
 		wx.CallAfter( pub.sendMessage, 'panelState', enable=True )
 		wx.CallAfter( pub.sendMessage, 'statusBarMsg', text='Tudo pronto!' )
@@ -27,8 +27,10 @@ class ThreadRequest(Thread):
 		self.start()
 
 	def run(self):
-		model.viewerRoutine(self.doc)
-		#wx.CallAfter( pub.sendMessage, 'viewPanel', a definir )
+		htmlDoc = model.viewerRoutine(self.doc)
+		wx.CallAfter( pub.sendMessage, 'viewPanel', htmlDoc=htmlDoc )
+		wx.CallAfter( pub.sendMessage, 'panelState', enable=True )
+		wx.CallAfter( pub.sendMessage, 'statusBarMsg', text='Tudo pronto!' )
 
 
 class JanelaPrincipal(wx.Frame):
@@ -86,7 +88,7 @@ class JanelaPrincipal(wx.Frame):
 		self.mainSizer.Add(self.leftSizer, 1, wx.EXPAND | wx.ALIGN_LEFT
 			| wx.RIGHT | wx.TOP | wx.BOTTOM, 1)
 		self.mainSizer.Add(self.pDireita, 3, wx.EXPAND | wx.ALIGN_RIGHT
-			| wx.LEFT | wx.TOP | wx.BOTTOM, 1)
+			| wx.LEFT | wx.TOP | wx.BOTTOM, 0)
 
 		self.SetSizer(self.mainSizer)
 
@@ -179,6 +181,7 @@ class PainelResultados(wx.Panel):
 		self.list = wx.ListBox(self, size=(100, 700))
 		self.Bind(wx.EVT_LISTBOX, self.onSelectListItem, self.list)
 		self.Bind(wx.EVT_LISTBOX_DCLICK, self.onRequestListItem, self.list)
+		pub.subscribe(self.onListState, 'panelState')
 
 		self.sizer.Add(self.list, 0, wx.ALL | wx.EXPAND, 0)
 		self.SetSizerAndFit(self.sizer)
@@ -199,8 +202,11 @@ class PainelResultados(wx.Panel):
 		self.list.InsertItems(strings, 0)
 		self.sizer.Layout()
 
-	def onListState(self, event):
-		pass
+	def onListState(self, enable):
+		if enable:
+			self.list.Enable()
+		else:
+			self.list.Disable()
 
 	def onSelectListItem(self, event):
 		docsList = event.GetEventObject()
@@ -211,24 +217,30 @@ class PainelResultados(wx.Panel):
 	def onRequestListItem(self, event):
 		docsList = event.GetEventObject()
 		index = docsList.GetSelection()
+		pub.sendMessage('panelState', enable=False)
+		pub.sendMessage('statusBarMsg', text='Buscando seleção...')
 		ThreadRequest(self.docs[index])
 
 
-class PainelDireita(wxScrll.ScrolledPanel):
+class PainelDireita(wx.Panel):
 	def __init__(self, parent):
-		wxScrll.ScrolledPanel.__init__(self, parent=parent)
+		wx.Panel.__init__(self, parent=parent)
 
 		self.SetAutoLayout(1)
-		self.SetupScrolling()
 
-		self.mensagem = wx.StaticText(self, label='Nada para ver aqui')
 		self.sizer = wx.BoxSizer()
-		self.sizer.Add(self.mensagem)
+
+		self.htmlViewer = html.WebView.New(self)
+		self.htmlViewer.SetPage('<body style="background-color: #f0f0f0">',
+			'C:\\Users\\Public')
+		self.sizer.Add(self.htmlViewer, 1, wx.EXPAND | wx.ALL, 0)
+		pub.subscribe(self.onHtmlViewer, 'viewPanel')
 
 		self.SetSizer(self.sizer)
 
-	def onHtmlViewer(self, event):
-		pass
+	def onHtmlViewer(self, htmlDoc):
+		self.htmlViewer.SetPage(htmlDoc,
+			'C:\\Users\\Public')
 
 
 class Aplicativo(wx.App):
