@@ -43,7 +43,7 @@ class Doc():
 			lang = res['mus'][0]['lang']
 			text = res['mus'][0]['text']
 
-			return Song(name, artName, url, lang, text, musId)
+			return Song(name, artName, url, lang, text, musId, res)
 		elif self.typeDoc == 'artist':
 			artUrl = self.url
 			url = API_URL + artUrl + 'index.js'
@@ -73,7 +73,7 @@ class Doc():
 
 			return Artist(
 				ident, artUrl, name, imageUrl,
-				genres, topLyrics, albums
+				genres, topLyrics, albums, res
 				)
 		elif self.typeDoc == 'album':
 			pass
@@ -105,7 +105,7 @@ class Doc():
 
 class Artist():
 	def __init__(self, ident, artUrl, name, imageUrl,
-		genres, topLyrics, albums):
+		genres, topLyrics, albums, raw):
 		self.ident = ident
 		self.url = artUrl
 		self.name = name
@@ -113,6 +113,7 @@ class Artist():
 		self.genres = genres
 		self.topLyrics = topLyrics
 		self.albums = albums
+		self.raw = raw
 
 	def toString(self):
 		strGenres = []
@@ -137,15 +138,19 @@ class Artist():
 		]
 		return stringList
 
+	def getDict(self):
+		return self.raw
+
 
 class Song():
-	def __init__(self, name, artName, url, lang, text, musId):
+	def __init__(self, name, artName, url, lang, text, musId, raw):
 		self.name = name
 		self.artName = artName
 		self.url = url
 		self.ident = musId
 		self.lang = lang
 		self.text = text
+		self.raw = raw
 
 	def translate(self, langID = 1):
 		url = API_URL + '/search.php?' + 'musid=' + self.ident + '&' \
@@ -175,6 +180,9 @@ class Song():
 			self.url
 			]
 		return stringList
+
+	def getDict(self):
+		return self.raw
 
 
 def _request(url):
