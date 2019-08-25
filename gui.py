@@ -1,6 +1,9 @@
 import wx
 import search
+
 import wx.html2 as html
+import logging as log
+
 from pubsub import pub
 from threading import Thread
 
@@ -14,9 +17,17 @@ class ThreadSearch(Thread):
 
 	def run(self):
 		docs = search.searchRoutine(self.words)
-		wx.CallAfter( pub.sendMessage, 'docsPanel', docs=docs )
-		wx.CallAfter( pub.sendMessage, 'panelState', enable=True )
-		wx.CallAfter( pub.sendMessage, 'statusBarMsg', text='Tudo pronto!' )
+		if docs and docs != []:
+			wx.CallAfter(pub.sendMessage, 'docsPanel', docs=docs)
+			wx.CallAfter(pub.sendMessage, 'statusBarMsg', text='Tudo pronto!')
+		elif docs == []:
+			wx.CallAfter(pub.sendMessage,
+				'statusBarMsg', text='Nada Encontrado')
+		else:
+			wx.CallAfter(pub.sendMessage,
+				'statusBarMsg', text='Erro de conexão')
+
+		wx.CallAfter(pub.sendMessage, 'panelState', enable=True)
 
 
 class ThreadRequest(Thread):
@@ -28,9 +39,14 @@ class ThreadRequest(Thread):
 
 	def run(self):
 		htmlDoc = search.viewerRoutine(self.doc)
-		wx.CallAfter( pub.sendMessage, 'viewPanel', htmlDoc=htmlDoc )
-		wx.CallAfter( pub.sendMessage, 'panelState', enable=True )
-		wx.CallAfter( pub.sendMessage, 'statusBarMsg', text='Tudo pronto!' )
+		if htmlDoc:
+			wx.CallAfter(pub.sendMessage, 'viewPanel', htmlDoc=htmlDoc)
+			wx.CallAfter(pub.sendMessage, 'statusBarMsg', text='Tudo pronto!')
+		else:
+			wx.CallAfter(pub.sendMessage,
+				'statusBarMsg', text='Erro de conexão')
+
+		wx.CallAfter(pub.sendMessage, 'panelState', enable=True)
 
 
 class JanelaPrincipal(wx.Frame):
@@ -40,6 +56,7 @@ class JanelaPrincipal(wx.Frame):
 		self.criaBarraInferior()
 		self.criaPanels()
 		self.SetAutoLayout(1)
+		log.info('frame criado')
 
 		pub.subscribe(self.onStatusBar, 'statusBarMsg')
 
@@ -95,9 +112,10 @@ class JanelaPrincipal(wx.Frame):
 	# Bindings
 	def onStatusBar(self, text):
 		self.SetStatusText(text)
+		log.info(f'novo texto: "{text}"')
 
 	def onSalvar(self, event):
-		print('Ainda não faz nada')
+		log.info('evento')
 
 	def onSair(self, event):
 		self.Destroy()
@@ -151,9 +169,11 @@ class PainelEsquerda(wx.Panel):
 	# Bindings
 	def onPanelState(self, enable):
 		if enable:
+			log.info('estado: ativado')
 			self.caixaDeTexto.Enable()
 			self.searchBtn.Enable()
 		else:
+			log.info('estado: desativado')
 			self.caixaDeTexto.Disable()
 			self.searchBtn.Disable()
 
@@ -190,22 +210,22 @@ class PainelResultados(wx.Panel):
 	def onResult(self, docs):
 		if self.docs != []:
 			self.list.Clear()
-		if docs == None:
-			strings = ['Nada encontrado']
-		else:
-			self.docs = docs
-			strings = list()
-			for doc in docs:
-				string = ' '.join( doc.toString() )
-				strings.append(string)
+
+		self.docs = docs
+		strings = list()
+		for doc in docs:
+			string = ' '.join( doc.toString() )
+			strings.append(string)
 
 		self.list.InsertItems(strings, 0)
 		self.sizer.Layout()
 
 	def onListState(self, enable):
 		if enable:
+			log.info('estado: ativado')
 			self.list.Enable()
 		else:
+			log.info('estado: desativado')
 			self.list.Disable()
 
 	def onSelectListItem(self, event):
@@ -238,6 +258,7 @@ class PainelDireita(wx.Panel):
 
 		self.SetSizer(self.sizer)
 
+	# Bindings
 	def onHtmlViewer(self, htmlDoc):
 		self.htmlViewer.SetPage(htmlDoc,
 			'C:\\Users\\Public')

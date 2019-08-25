@@ -1,5 +1,6 @@
 import json
 import requests
+import logging as log
 
 API_URL = 'https://api.vagalume.com.br'
 API_LIMIT = '&limit=10'
@@ -154,7 +155,7 @@ class Song():
 				+ 'apikey=' + API_KEY
 		res = _request(url)
 		if res == None:
-			return
+			return res
 		try:
 			translUrl = res['mus'][0]['translate'][0]['url']
 			translText = res['mus'][0]['translate'][0]['text']
@@ -173,7 +174,7 @@ class Song():
 		stringList = [
 			self.title,
 			self.artName,
-			LANGUAGES[0],
+			LANGUAGES[self.lang],
 			self.text,
 			self.url
 			]
@@ -181,16 +182,16 @@ class Song():
 
 
 def _request(url):
-	print(url)
+	log.info('URL: ' + url)
 	try:
 		api_response = requests.get(url)
 		if api_response.status_code == 200:
 			return json.loads(api_response.content)
 		else:
-			print('Cod.: ' + str(r.status_code))
+			log.error('Cod.: ' + str(r.status_code))
 			return None
 	except:
-		print('Connection error')
+		log.error('Connection error')
 		return None
 
 def search(keyWords, searchFor, API_KEY):

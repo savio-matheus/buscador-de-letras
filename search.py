@@ -1,19 +1,35 @@
 import api_vagalume as api
+import logging as log
 
 API_KEY = ''
 
 def searchRoutine(keyWords):
-	search = list()
-	search.extend( api.search(keyWords, 0, API_KEY) )
-	search.extend( api.search(keyWords, 1, API_KEY) )
-	search.extend( api.search(keyWords, 2, API_KEY) )
-	#search.extend( api.search(keyWords, 3, API_KEY) ) # Busca por álbum
+	log.info(f'busca por "{keyWords}"')
 
-	if search and search != []:
-		search = _removeDuplicates(search)
+	search = list()
+	searchArt = api.search(keyWords, 0, API_KEY)
+	searchExcerpt = api.search(keyWords, 1, API_KEY)
+	searchArtmus = api.search(keyWords, 2, API_KEY)
+	#searchAlb = api.search(keyWords, 3, API_KEY) # Busca por álbum
+
+	if searchArt: search.extend(searchArt)
+	else: search = None
+	if searchExcerpt: search.extend(searchExcerpt)
+	else: search = None
+	if searchArtmus: search.extend(searchArtmus)
+	else: search = None
+	#if searchAlb: search.extend(searchAlb)
+	#else: search = None
+
+	if search == []:
+		log.info('a busca não retornou resultados')
+		return search
+	elif not search:
+		log.info('problema de conexão')
 		return search
 	else:
-		return None
+		search = _removeDuplicates(search)
+		return search
 
 def viewerRoutine(docObj):
 	if docObj.typeDoc == 'song':
@@ -32,22 +48,30 @@ def _removeDuplicates(docsList):
 def _getSong(docObj):
 	song = _checkCache(docObj)
 	if song:
+		log.info('em cache')
 		return _toHTML(song, 'song')
 	else:
 		song = docObj.expand(API_KEY)
-		_toCache(song)
-		song = _toHTML(song, 'song')
-		return song
+		if song:
+			_toCache(song)
+			song = _toHTML(song, 'song')
+			return song
+		else:
+			return None
 
 def _getArtist(docObj):
 	art = _checkCache(docObj)
 	if art:
+		log.info('em cache')
 		return _toHTML(art, 'artist')
 	else:
 		art = docObj.expand(API_KEY)
-		_toCache(art)
-		art = _toHTML(art, 'artist')
-		return art
+		if art:
+			_toCache(art)
+			art = _toHTML(art, 'artist')
+			return art
+		else:
+			return None
 
 def _getAlbum(docObj):
 	pass
