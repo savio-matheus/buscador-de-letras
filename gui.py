@@ -1,5 +1,5 @@
 import wx
-import model
+import search
 import wx.html2 as html
 from pubsub import pub
 from threading import Thread
@@ -13,7 +13,7 @@ class ThreadSearch(Thread):
 		self.start()
 
 	def run(self):
-		docs = model.searchRoutine(self.words)
+		docs = search.searchRoutine(self.words)
 		wx.CallAfter( pub.sendMessage, 'docsPanel', docs=docs )
 		wx.CallAfter( pub.sendMessage, 'panelState', enable=True )
 		wx.CallAfter( pub.sendMessage, 'statusBarMsg', text='Tudo pronto!' )
@@ -27,7 +27,7 @@ class ThreadRequest(Thread):
 		self.start()
 
 	def run(self):
-		htmlDoc = model.viewerRoutine(self.doc)
+		htmlDoc = search.viewerRoutine(self.doc)
 		wx.CallAfter( pub.sendMessage, 'viewPanel', htmlDoc=htmlDoc )
 		wx.CallAfter( pub.sendMessage, 'panelState', enable=True )
 		wx.CallAfter( pub.sendMessage, 'statusBarMsg', text='Tudo pronto!' )
@@ -252,6 +252,3 @@ class Aplicativo(wx.App):
 def main():
 	app = Aplicativo()
 	app.MainLoop()
-
-if __name__ == '__main__':
-	main()
