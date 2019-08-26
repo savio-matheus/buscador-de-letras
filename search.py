@@ -6,79 +6,42 @@ API_KEY = ''
 def searchRoutine(keyWords):
 	log.info(f'busca por "{keyWords}"')
 
-	search = list()
-	searchArt = api.search(keyWords, 0, API_KEY)
-	searchExcerpt = api.search(keyWords, 1, API_KEY)
-	searchArtmus = api.search(keyWords, 2, API_KEY)
-	#searchAlb = api.search(keyWords, 3, API_KEY) # Busca por álbum
+	search = api.search(keyWords, API_KEY)
 
-	if searchArt: search.extend(searchArt)
-	else: search = None
-	if searchExcerpt: search.extend(searchExcerpt)
-	else: search = None
-	if searchArtmus: search.extend(searchArtmus)
-	else: search = None
-	#if searchAlb: search.extend(searchAlb)
-	#else: search = None
-
-	if search == []:
-		log.info('a busca não retornou resultados')
-		return search
-	elif not search:
+	if search is None:
 		log.info('problema de conexão')
-		return search
+		return None
+	elif not search:
+		log.info('a busca não retornou resultados')
+		return []
 	else:
-		search = _removeDuplicates(search)
 		return search
 
-def viewerRoutine(docObj):
-	if docObj.typeDoc == 'song':
-		html = _getSong(docObj)
-	elif docObj.typeDoc == 'artist':
-		html = _getArtist(docObj)
-	else:
-		pass # reservado para o caso álbum
+def viewerRoutine(docSearch):
+	if isinstance(docSearch, api.DocAlb):
+		return None
 
+	doc = _get(docSearch)
+	html = _toHTML(doc)
 	return html
 
 # Daqui para baixo ainda não está terminado
-def _removeDuplicates(docsList):
-	return docsList
-
-def _getSong(docObj):
-	song = _checkCache(docObj)
-	if song:
+def _get(docSearch):
+	doc = _checkCache(docSearch)
+	if doc:
 		log.info('em cache')
-		return _toHTML(song, 'song')
+		return doc
 	else:
-		song = docObj.expand(API_KEY)
-		if song:
-			_toCache(song)
-			song = _toHTML(song, 'song')
-			return song
+		doc = docSearch.expand(API_KEY)
+		if doc:
+			_toCache(doc)
+			return doc
 		else:
 			return None
 
-def _getArtist(docObj):
-	art = _checkCache(docObj)
-	if art:
-		log.info('em cache')
-		return _toHTML(art, 'artist')
-	else:
-		art = docObj.expand(API_KEY)
-		if art:
-			_toCache(art)
-			art = _toHTML(art, 'artist')
-			return art
-		else:
-			return None
-
-def _getAlbum(docObj):
-	pass
-
-def _toHTML(obj, objType):
-	if objType == 'song':
-		with open('html/templateSong.html', 'r') as file:
+def _toHTML(obj):
+	if isinstance(obj, api.Song):
+		with open('html/templateSong.html', 'r', encoding="utf8") as file:
 			templateHTML = file.read()
 
 		stringList = obj.toString()
@@ -90,7 +53,7 @@ def _toHTML(obj, objType):
 			stringList[3],
 			stringList[4]
 			)
-	elif objType == 'artist':
+	elif isinstance(obj, api.Band):
 		with open('html/templateArtist.html', 'r', encoding="utf8") as file:
 			templateHTML = file.read()
 	
@@ -127,5 +90,5 @@ def _toHTML(obj, objType):
 def _toCache(obj):
 	pass
 
-def _checkCache(docObj):
+def _checkCache(doc):
 	return None
