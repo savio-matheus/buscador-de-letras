@@ -92,16 +92,15 @@ class DocSong():
         url = res['mus'][0]['url']
         lang = res['mus'][0]['lang']
         text = res['mus'][0]['text']
+
+        if lang > 9: lang = 0
+
         return Song(name, artName, url, lang, text, musId, res)
 
     def toString(self):
         stringList = []
         stringList.append('(mus)')
-        try:
-            stringList.append('(%s)' % LANGUAGES[self.lang])
-        except IndexError:
-            stringList.append('(%s)' % LANGUAGES[0])
-
+        stringList.append('(%s)' % LANGUAGES[self.lang])
         stringList.append(self.title)
         stringList.append(self.band)
         return stringList
@@ -235,6 +234,7 @@ def _docsFactory(res):
             lang = dict_.get('langID')
 
             if title and lang:
+                if lang > 9: lang = 0
                 docs.append(DocSong(id_, url, band, title, lang))
             elif title:
                 docs.append(DocAlb(id_, url, band, title))

@@ -83,7 +83,8 @@ def _toHTML(obj):
 			stringList[5]
 		)
 	else:
-		pass
+		log.info('não implementado')
+		return None
 
 	return newHTML
 
