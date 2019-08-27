@@ -132,7 +132,7 @@ class JanelaPrincipal(wx.Frame):
 			pathName = dialog.GetPath()
 
 			try:
-				with open(pathName, 'w') as file:
+				with open(pathName, 'w', encoding="utf8") as file:
 					file.write(htmlDoc)
 			except IOError:
 				log.error('não foi possível salvar o arquivo')
