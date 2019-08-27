@@ -115,7 +115,27 @@ class JanelaPrincipal(wx.Frame):
 		log.info(f'novo texto: "{text}"')
 
 	def onSalvar(self, event):
-		log.info('evento')
+		htmlDoc = self.pDireita.htmlDoc
+		fileName = self.pDireita.htmlViewer.GetCurrentTitle()
+
+		if htmlDoc is None:
+			wx.CallAfter(pub.sendMessage,
+				'statusBarMsg', text='Escolha uma música ou artista.')
+			return
+
+		with wx.FileDialog(self, message='Salvar música',
+			defaultFile=fileName + '.html', style=wx.FD_SAVE) as dialog:
+
+			if dialog.ShowModal() == wx.ID_CANCEL:
+				return
+
+			pathName = dialog.GetPath()
+
+			try:
+				with open(pathName, 'w') as file:
+					file.write(htmlDoc)
+			except IOError:
+				log.error('não foi possível salvar o arquivo')
 
 	def onSair(self, event):
 		self.Destroy()
@@ -192,6 +212,7 @@ class PainelResultados(wx.Panel):
 		wx.Panel.__init__(self, parent = parent)
 		self.parent = parent
 		self.docs = list()
+		self.index = None
 
 		self.SetAutoLayout(1)
 		pub.subscribe(self.onResult, 'docsPanel')
@@ -230,16 +251,16 @@ class PainelResultados(wx.Panel):
 
 	def onSelectListItem(self, event):
 		docsList = event.GetEventObject()
-		index = docsList.GetSelection()
-		string = docsList.GetString(index)
+		self.index = docsList.GetSelection()
+		string = docsList.GetString(self.index)
 		pub.sendMessage('statusBarMsg', text='Seleção: ' + string)
 
 	def onRequestListItem(self, event):
 		docsList = event.GetEventObject()
-		index = docsList.GetSelection()
+		self.index = docsList.GetSelection()
 		pub.sendMessage('panelState', enable=False)
 		pub.sendMessage('statusBarMsg', text='Buscando seleção...')
-		ThreadRequest(self.docs[index])
+		ThreadRequest(self.docs[self.index])
 
 
 class PainelDireita(wx.Panel):
@@ -249,7 +270,7 @@ class PainelDireita(wx.Panel):
 		self.SetAutoLayout(1)
 
 		self.sizer = wx.BoxSizer()
-
+		self.htmlDoc = None
 		self.htmlViewer = html.WebView.New(self)
 		self.htmlViewer.SetPage('<body style="background-color: #f0f0f0">',
 			'C:\\Users\\Public')
@@ -260,6 +281,7 @@ class PainelDireita(wx.Panel):
 
 	# Bindings
 	def onHtmlViewer(self, htmlDoc):
+		self.htmlDoc = htmlDoc
 		self.htmlViewer.SetPage(htmlDoc,
 			'C:\\Users\\Public')
 
