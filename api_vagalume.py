@@ -6,7 +6,7 @@ API_URL = 'https://api.vagalume.com.br'
 API_LIMIT = '&limit=10'
 
 LANGUAGES = [
-	'no info',
+    'no info',
     'pt-br',
     'en',
     'es',
