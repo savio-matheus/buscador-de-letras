@@ -66,6 +66,8 @@ class JanelaPrincipal(wx.Frame):
         opcoesArquivo = wx.Menu()
         opcaoSalvar = opcoesArquivo.Append(wx.ID_SAVE,
             '&Salvar', 'Salva a letra de música selecionada.')
+        optionTranslate = opcoesArquivo.Append(wx.ID_ANY,
+            '&Traduzir', 'Obtém a tradução da música se disponível.')
         opcoesArquivo.AppendSeparator()
         opcaoSair = opcoesArquivo.Append(wx.ID_EXIT,
             'S&air', 'Fecha o programa.')
@@ -81,6 +83,7 @@ class JanelaPrincipal(wx.Frame):
         barraMenus.Append(opcoesSobre, 'Sobre')
 
         self.Bind(wx.EVT_MENU, self.onSalvar, opcaoSalvar)
+        self.Bind(wx.EVT_MENU, self.onTranslate, optionTranslate)
         self.Bind(wx.EVT_MENU, self.onSair, opcaoSair)
         self.Bind(wx.EVT_MENU, self.onCreditos, opcaoCreditos)
         self.Bind(wx.EVT_MENU, self.onQuemFez, opcaoQuemFez)
@@ -158,6 +161,9 @@ class JanelaPrincipal(wx.Frame):
         msg.Centre()
         msg.ShowModal()
         msg.Destroy()
+
+    def onTranslate(self, event):
+        pass
 
 
 class PainelEsquerda(wx.Panel):
