@@ -1,12 +1,11 @@
-import wx
-import search
-
-import wx.html2 as html
 import logging as log
-
-from pubsub import pub
 from threading import Thread
 
+import wx
+import wx.html2 as html
+from pubsub import pub
+
+import search
 
 class ThreadSearch(Thread):
     def __init__(self, words):
@@ -163,7 +162,7 @@ class JanelaPrincipal(wx.Frame):
         msg.Destroy()
 
     def onTranslate(self, event):
-        pass
+        search.translateRoutine()
 
 
 class PainelEsquerda(wx.Panel):
@@ -290,6 +289,7 @@ class PainelDireita(wx.Panel):
         self.htmlDoc = htmlDoc
         self.htmlViewer.SetPage(htmlDoc,
             'C:\\Users\\Public')
+        log.info('view atualizado')
 
 
 class Aplicativo(wx.App):

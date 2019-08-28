@@ -1,6 +1,7 @@
+import logging
+
 import gui
 import search
-import logging
 
 def setLogger():
     logging.basicConfig(level=logging.INFO,
