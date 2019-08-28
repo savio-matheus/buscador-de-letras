@@ -146,9 +146,10 @@ class Song:
                     self.url = translUrl
                     self.lang = langID
                     self.text = translText
-                    return
+                    return True
             
         log.info("There's no translation in the choosen language")
+        return False
 
     def toString(self):
         print(self.lang)
