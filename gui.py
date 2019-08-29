@@ -1,5 +1,4 @@
 import logging as log
-from threading import Thread
 
 import wx
 import wx.html2 as html
@@ -7,48 +6,9 @@ from pubsub import pub
 
 import search
 
-class ThreadSearch(Thread):
-    def __init__(self, words):
-        Thread.__init__(self)
-        self.setDaemon(True)
-        self.words = words
-        self.start()
-
-    def run(self):
-        docs = search.searchRoutine(self.words)
-        if docs and docs != []:
-            wx.CallAfter(pub.sendMessage, 'docsPanel', docs=docs)
-            wx.CallAfter(pub.sendMessage, 'statusBarMsg', text='Tudo pronto!')
-        elif docs == []:
-            wx.CallAfter(pub.sendMessage,
-                'statusBarMsg', text='Nada Encontrado')
-        else:
-            wx.CallAfter(pub.sendMessage,
-                'statusBarMsg', text='Erro de conexão')
-
-        wx.CallAfter(pub.sendMessage, 'panelState', enable=True)
-
-
-class ThreadRequest(Thread):
-    def __init__(self, doc):
-        Thread.__init__(self)
-        self.setDaemon(True)
-        self.doc = doc
-        self.start()
-
-    def run(self):
-        htmlDoc = search.viewerRoutine(self.doc)
-        if htmlDoc:
-            wx.CallAfter(pub.sendMessage, 'viewPanel', htmlDoc=htmlDoc)
-            wx.CallAfter(pub.sendMessage, 'statusBarMsg', text='Tudo pronto!')
-        else:
-            wx.CallAfter(pub.sendMessage,
-                'statusBarMsg', text='Erro de conexão')
-
-        wx.CallAfter(pub.sendMessage, 'panelState', enable=True)
-
 
 class MainFrame(wx.Frame):
+
     def __init__(self, parent, title):
         wx.Frame.__init__(self, parent, title = title, size = (900, 550))
         self.criaMenuSuperior()
@@ -166,6 +126,7 @@ class MainFrame(wx.Frame):
 
 
 class LeftPanel(wx.Panel):
+
     def __init__(self, parent):
         wx.Panel.__init__(self, parent = parent)
         
@@ -209,10 +170,11 @@ class LeftPanel(wx.Panel):
         words = self.textBox.GetLineText(0)
         pub.sendMessage('panelState', enable=False)
         pub.sendMessage('statusBarMsg', text='Procurando...')
-        ThreadSearch(words)
+        search.ThreadSearch(words)
 
 
 class ResultsPanel(wx.Panel):
+
     def __init__(self, parent):
         wx.Panel.__init__(self, parent = parent)
         self.parent = parent
@@ -265,10 +227,11 @@ class ResultsPanel(wx.Panel):
         self.index = docsList.GetSelection()
         pub.sendMessage('panelState', enable=False)
         pub.sendMessage('statusBarMsg', text='Buscando seleção...')
-        ThreadRequest(self.docs[self.index])
+        search.ThreadRequest(self.docs[self.index])
 
 
 class ViewerPanel(wx.Panel):
+
     def __init__(self, parent):
         wx.Panel.__init__(self, parent=parent)
 
@@ -293,6 +256,7 @@ class ViewerPanel(wx.Panel):
 
 
 class App(wx.App):
+    
     def OnInit(self):
         frame = MainFrame(None, 'Caça-Letras')
         frame.Show()

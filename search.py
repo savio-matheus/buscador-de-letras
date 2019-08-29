@@ -1,6 +1,8 @@
 import logging as log
+from threading import Thread
 
 from pubsub import pub
+from wx import CallAfter
 
 import api_vagalume as api
 
@@ -9,6 +11,50 @@ API_KEY = ''
 _openedDoc = None
 _openedHtml = None
 _openedSearch = None
+
+
+class ThreadSearch(Thread):
+
+    def __init__(self, words):
+        Thread.__init__(self)
+        self.setDaemon(True)
+        self.words = words
+        self.start()
+
+    def run(self):
+        docs = searchRoutine(self.words)
+        if docs and docs != []:
+            CallAfter(pub.sendMessage, 'docsPanel', docs=docs)
+            CallAfter(pub.sendMessage, 'statusBarMsg', text='Tudo pronto!')
+        elif docs == []:
+            CallAfter(pub.sendMessage,
+                'statusBarMsg', text='Nada Encontrado')
+        else:
+            CallAfter(pub.sendMessage,
+                'statusBarMsg', text='Erro de conexão')
+
+        CallAfter(pub.sendMessage, 'panelState', enable=True)
+
+
+class ThreadRequest(Thread):
+    
+    def __init__(self, doc):
+        Thread.__init__(self)
+        self.setDaemon(True)
+        self.doc = doc
+        self.start()
+
+    def run(self):
+        htmlDoc = viewerRoutine(self.doc)
+        if htmlDoc:
+            CallAfter(pub.sendMessage, 'viewPanel', htmlDoc=htmlDoc)
+            CallAfter(pub.sendMessage, 'statusBarMsg', text='Tudo pronto!')
+        else:
+            CallAfter(pub.sendMessage,
+                'statusBarMsg', text='Erro de conexão')
+
+        CallAfter(pub.sendMessage, 'panelState', enable=True)
+
 
 def searchRoutine(keyWords):
     log.info(f'busca por "{keyWords}"')
