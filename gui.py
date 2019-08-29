@@ -48,7 +48,7 @@ class ThreadRequest(Thread):
         wx.CallAfter(pub.sendMessage, 'panelState', enable=True)
 
 
-class JanelaPrincipal(wx.Frame):
+class MainFrame(wx.Frame):
     def __init__(self, parent, title):
         wx.Frame.__init__(self, parent, title = title, size = (900, 550))
         self.criaMenuSuperior()
@@ -62,32 +62,32 @@ class JanelaPrincipal(wx.Frame):
         self.Show(True)
 
     def criaMenuSuperior(self):
-        opcoesArquivo = wx.Menu()
-        opcaoSalvar = opcoesArquivo.Append(wx.ID_SAVE,
+        itemFile = wx.Menu()
+        itemSave = itemFile.Append(wx.ID_SAVE,
             '&Salvar', 'Salva a letra de música selecionada.')
-        optionTranslate = opcoesArquivo.Append(wx.ID_ANY,
+        itemTranslate = itemFile.Append(wx.ID_ANY,
             '&Traduzir', 'Obtém a tradução da música se disponível.')
-        opcoesArquivo.AppendSeparator()
-        opcaoSair = opcoesArquivo.Append(wx.ID_EXIT,
+        itemFile.AppendSeparator()
+        itemExit = itemFile.Append(wx.ID_EXIT,
             'S&air', 'Fecha o programa.')
 
-        opcoesSobre = wx.Menu()
-        opcaoCreditos = opcoesSobre.Append(1,
+        itemAbout = wx.Menu()
+        itemCredits = itemAbout.Append(1,
             '&Créditos', 'Frameworks e APIs usados no programa.')
-        opcaoQuemFez = opcoesSobre.Append(wx.ID_ABOUT,
+        itemDev = itemAbout.Append(wx.ID_ABOUT,
             '&Quem fez', 'GitHub do (projeto de) desenvolvedor.')
 
-        barraMenus = wx.MenuBar()
-        barraMenus.Append(opcoesArquivo, 'Arquivo')
-        barraMenus.Append(opcoesSobre, 'Sobre')
+        menuBar = wx.MenuBar()
+        menuBar.Append(itemFile, 'Arquivo')
+        menuBar.Append(itemAbout, 'Sobre')
 
-        self.Bind(wx.EVT_MENU, self.onSalvar, opcaoSalvar)
-        self.Bind(wx.EVT_MENU, self.onTranslate, optionTranslate)
-        self.Bind(wx.EVT_MENU, self.onSair, opcaoSair)
-        self.Bind(wx.EVT_MENU, self.onCreditos, opcaoCreditos)
-        self.Bind(wx.EVT_MENU, self.onQuemFez, opcaoQuemFez)
+        self.Bind(wx.EVT_MENU, self.onSave, itemSave)
+        self.Bind(wx.EVT_MENU, self.onTranslate, itemTranslate)
+        self.Bind(wx.EVT_MENU, self.onExit, itemExit)
+        self.Bind(wx.EVT_MENU, self.onCredits, itemCredits)
+        self.Bind(wx.EVT_MENU, self.onDev, itemDev)
 
-        self.SetMenuBar(barraMenus)
+        self.SetMenuBar(menuBar)
 
     def criaBarraInferior(self):
         self.CreateStatusBar()
@@ -97,16 +97,16 @@ class JanelaPrincipal(wx.Frame):
         self.leftSizer = wx.BoxSizer(wx.VERTICAL)
         self.mainSizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.pEsquerda = PainelEsquerda(self)
-        self.pDireita = PainelDireita(self)
-        self.pResultados = PainelResultados(self)
+        self.pLeft = LeftPanel(self)
+        self.pRight = ViewerPanel(self)
+        self.pSearchResults = ResultsPanel(self)
 
-        self.leftSizer.Add(self.pEsquerda, 1, wx.EXPAND | wx.RIGHT, 0)
-        self.leftSizer.Add(self.pResultados, 20,  wx.EXPAND | wx.ALL, 0)
+        self.leftSizer.Add(self.pLeft, 1, wx.EXPAND | wx.RIGHT, 0)
+        self.leftSizer.Add(self.pSearchResults, 20,  wx.EXPAND | wx.ALL, 0)
 
         self.mainSizer.Add(self.leftSizer, 1, wx.EXPAND | wx.ALIGN_LEFT
             | wx.RIGHT | wx.TOP | wx.BOTTOM, 1)
-        self.mainSizer.Add(self.pDireita, 3, wx.EXPAND | wx.ALIGN_RIGHT
+        self.mainSizer.Add(self.pRight, 3, wx.EXPAND | wx.ALIGN_RIGHT
             | wx.LEFT | wx.TOP | wx.BOTTOM, 0)
 
         self.SetSizer(self.mainSizer)
@@ -116,9 +116,9 @@ class JanelaPrincipal(wx.Frame):
         self.SetStatusText(text)
         log.info(f'novo texto: "{text}"')
 
-    def onSalvar(self, event):
-        htmlDoc = self.pDireita.htmlDoc
-        fileName = self.pDireita.htmlViewer.GetCurrentTitle()
+    def onSave(self, event):
+        htmlDoc = self.pRight.htmlDoc
+        fileName = self.pRight.htmlViewer.GetCurrentTitle()
 
         if htmlDoc is None:
             wx.CallAfter(pub.sendMessage,
@@ -139,10 +139,10 @@ class JanelaPrincipal(wx.Frame):
             except IOError:
                 log.error('não foi possível salvar o arquivo')
 
-    def onSair(self, event):
+    def onExit(self, event):
         self.Destroy()
 
-    def onCreditos(self, event):
+    def onCredits(self, event):
         msg = wx.MessageDialog(self,
             '''Um programa para buscar letras de músicas.
             Usa wxPython para a interface gráfica e 
@@ -153,7 +153,7 @@ class JanelaPrincipal(wx.Frame):
         msg.ShowModal()
         msg.Destroy()
 
-    def onQuemFez(self, event):
+    def onDev(self, event):
         msg = wx.MessageDialog(self,
             'Código fonte em https://github.com/savio-matheus',
             'Quem Fez', wx.OK)
@@ -165,28 +165,28 @@ class JanelaPrincipal(wx.Frame):
         search.translateRoutine()
 
 
-class PainelEsquerda(wx.Panel):
+class LeftPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent = parent)
         
-        self.mensagem = wx.StaticText(self, -1,
+        self.message = wx.StaticText(self, -1,
             "Busque uma música, álbum ou artista")
-        self.caixaDeTexto = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
+        self.textBox = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
         self.icon = wx.Bitmap('img/kisspng-lupa16.bmp', wx.BITMAP_TYPE_ANY)
         self.searchBtn = wx.BitmapButton(self, bitmap=self.icon, style=wx.BU_TOP)
 
         self.sizerSearch = wx.BoxSizer(wx.HORIZONTAL)
-        self.sizerSearch.Add(self.caixaDeTexto, 6, wx.EXPAND | wx.ALL, 0)
+        self.sizerSearch.Add(self.textBox, 6, wx.EXPAND | wx.ALL, 0)
         self.sizerSearch.Add(self.searchBtn, 1, wx.EXPAND | wx.ALL, 0)
 
         self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.sizer.Add(self.mensagem, 1,
+        self.sizer.Add(self.message, 1,
             wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 5)
         self.sizer.Add(self.sizerSearch, 1,
             wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
 
         self.Bind(wx.EVT_BUTTON, self.onSearchBtn, self.searchBtn)
-        self.Bind(wx.EVT_TEXT_ENTER, self.onPressEnter, self.caixaDeTexto)
+        self.Bind(wx.EVT_TEXT_ENTER, self.onPressEnter, self.textBox)
         pub.subscribe(self.onPanelState, 'panelState')
 
         self.SetSizer(self.sizer)
@@ -195,24 +195,24 @@ class PainelEsquerda(wx.Panel):
     def onPanelState(self, enable):
         if enable:
             log.info('estado: ativado')
-            self.caixaDeTexto.Enable()
+            self.textBox.Enable()
             self.searchBtn.Enable()
         else:
             log.info('estado: desativado')
-            self.caixaDeTexto.Disable()
+            self.textBox.Disable()
             self.searchBtn.Disable()
 
     def onPressEnter(self, event):
         self.onSearchBtn(event)
 
     def onSearchBtn(self, event):
-        words = self.caixaDeTexto.GetLineText(0)
+        words = self.textBox.GetLineText(0)
         pub.sendMessage('panelState', enable=False)
         pub.sendMessage('statusBarMsg', text='Procurando...')
         ThreadSearch(words)
 
 
-class PainelResultados(wx.Panel):
+class ResultsPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent = parent)
         self.parent = parent
@@ -268,7 +268,7 @@ class PainelResultados(wx.Panel):
         ThreadRequest(self.docs[self.index])
 
 
-class PainelDireita(wx.Panel):
+class ViewerPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent=parent)
 
@@ -292,12 +292,12 @@ class PainelDireita(wx.Panel):
         log.info('view atualizado')
 
 
-class Aplicativo(wx.App):
+class App(wx.App):
     def OnInit(self):
-        frame = JanelaPrincipal(None, 'Caça-Letras')
+        frame = MainFrame(None, 'Caça-Letras')
         frame.Show()
         return True
 
 def main():
-    app = Aplicativo()
+    app = App()
     app.MainLoop()
