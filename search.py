@@ -38,14 +38,14 @@ class ThreadSearch(Thread):
 
 class ThreadRequest(Thread):
     
-    def __init__(self, doc):
+    def __init__(self, index):
         Thread.__init__(self)
         self.setDaemon(True)
-        self.doc = doc
+        self.index = index
         self.start()
 
     def run(self):
-        htmlDoc = viewerRoutine(self.doc)
+        htmlDoc = viewerRoutine(_openedSearch[self.index])
         if htmlDoc:
             CallAfter(pub.sendMessage, 'viewPanel', htmlDoc=htmlDoc)
             CallAfter(pub.sendMessage, 'statusBarMsg', text='Tudo pronto!')
@@ -170,5 +170,14 @@ def _toGlobal(doc = None, html = None, search = None):
     global _openedSearch
 
     if doc is not None: _openedDoc = doc
-    if html is not None: _openedHtml = doc
+    if html is not None: _openedHtml = html
     if search is not None: _openedSearch = search
+
+def openedDoc():
+    return _openedDoc
+
+def openedSearch():
+    return _openedSearch
+
+def openedHtml():
+    return _openedHtml

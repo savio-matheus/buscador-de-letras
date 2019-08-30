@@ -77,7 +77,7 @@ class MainFrame(wx.Frame):
         log.info(f'novo texto: "{text}"')
 
     def onSave(self, event):
-        htmlDoc = self.pRight.htmlDoc
+        htmlDoc = search.openedHtml()
         fileName = self.pRight.htmlViewer.GetCurrentTitle()
 
         if htmlDoc is None:
@@ -178,7 +178,6 @@ class ResultsPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent = parent)
         self.parent = parent
-        self.docs = list()
         self.index = None
 
         self.SetAutoLayout(1)
@@ -196,10 +195,8 @@ class ResultsPanel(wx.Panel):
 
     # Bindings
     def onResult(self, docs):
-        if self.docs != []:
-            self.list.Clear()
+        self.list.Clear()
 
-        self.docs = docs
         strings = list()
         for doc in docs:
             string = ' '.join( doc.toString() )
@@ -227,7 +224,7 @@ class ResultsPanel(wx.Panel):
         self.index = docsList.GetSelection()
         pub.sendMessage('panelState', enable=False)
         pub.sendMessage('statusBarMsg', text='Buscando seleção...')
-        search.ThreadRequest(self.docs[self.index])
+        search.ThreadRequest(self.index)
 
 
 class ViewerPanel(wx.Panel):
@@ -238,7 +235,6 @@ class ViewerPanel(wx.Panel):
         self.SetAutoLayout(1)
 
         self.sizer = wx.BoxSizer()
-        self.htmlDoc = None
         self.htmlViewer = html.WebView.New(self)
         self.htmlViewer.SetPage('<body style="background-color: #f0f0f0">',
             'C:\\Users\\Public')
@@ -249,7 +245,6 @@ class ViewerPanel(wx.Panel):
 
     # Bindings
     def onHtmlViewer(self, htmlDoc):
-        self.htmlDoc = htmlDoc
         self.htmlViewer.SetPage(htmlDoc,
             'C:\\Users\\Public')
         log.info('view atualizado')
