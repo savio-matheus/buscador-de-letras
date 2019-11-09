@@ -171,30 +171,28 @@ class Band:
         self.url = artUrl
         self.name = name
         self.imageUrl = imageUrl
-        self.genres = genres
-        self.topLyrics = topLyrics
-        self.albums = albums
+
+        self.genres = []
+        for i in genres:
+            self.genres.append(i['name'])
+
+        self.topLyrics = []
+        for i in topLyrics:
+            self.topLyrics.append(i['desc'])
+
+        self.albums = []
+        for i in albums:
+            self.albums.append(i['desc'])
+
         self.raw = raw
 
     def toString(self):
-        strGenres = []
-        for i in self.genres:
-            strGenres.append(i['name'])
-
-        strTopLyrics = []
-        for i in self.topLyrics:
-            strTopLyrics.append(i['desc'])
-
-        strAlbums = []
-        for i in self.albums:
-            strAlbums.append(i['desc'])
-
         stringList = [
             self.name,
             self.imageUrl,
-            strGenres,
-            strTopLyrics,
-            strAlbums,
+            self.genres,
+            self.topLyrics,
+            self.albums,
             self.url
         ]
         return stringList

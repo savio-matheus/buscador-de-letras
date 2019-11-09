@@ -127,6 +127,7 @@ def _toHTML(obj):
             templateHTML = file.read()
     
         stringList = obj.toString()
+        print(stringList)
         
         genres = str()
         for i in stringList[2]:
@@ -163,6 +164,7 @@ def _toCache(obj):
 
 def _checkCache(doc):
     return None
+
 
 def _toGlobal(doc = None, html = None, search = None):
     global _openedDoc
